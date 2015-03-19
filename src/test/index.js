@@ -36,7 +36,7 @@ const reducer = f => new Reducer({
   empty() {
     return f()
   },
-  receive(result, input) {
+  step(result, input) {
     return f(result, input)
   },
   result(result) {

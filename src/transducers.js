@@ -30,16 +30,16 @@ export const isReduced = x =>
   (x && x[Reduced.symbol])
 
 export class Reducer {
-  constructor({empty, receive, result}) {
+  constructor({empty, step, result}) {
     this.empty = empty || this.empty
-    this.receive = receive || this.receive
+    this.step = step || this.step
     this.result = result || this.result
   }
   empty() {
     throw TypeError('Reducer must implement .empty method')
   }
-  receive(result, input) {
-    throw TypeError('Reducer must implement .receive method')
+  step(result, input) {
+    throw TypeError('Reducer must implement .step method')
   }
   result(value) {
     throw TypeError('Reducer must implement .result method')
@@ -57,11 +57,11 @@ export class Transducer extends Reducer {
   empty() {
     return this.reducer.empty()
   }
-  receive(state, input) {
+  step(state, input) {
     this.advance(state, input)
   }
   advance(state, input) {
-    return this.reducer.receive(state, input)
+    return this.reducer.step(state, input)
   }
   result(state) {
     return this.reducer.result(state)
@@ -90,11 +90,11 @@ export const Transformer = TransducerType => (...params) =>
 
 
 class Map extends Transducer {
-  setup(step) {
-    this.step = step
+  setup(f) {
+    this.f = f
   }
-  receive(state, input) {
-    return this.advance(state, this.step(input))
+  step(state, input) {
+    return this.advance(state, this.f(input))
   }
 }
 
@@ -105,7 +105,7 @@ class Filter extends Transducer {
   setup(p) {
     this.p = p
   }
-  receive(state, input) {
+  step(state, input) {
     if (this.p(input)) {
       return this.advance(state, input)
     }
@@ -117,7 +117,7 @@ export const filter = Transformer(Filter)
 export const remove = p => filter(x => !p(x))
 
 class DropRepeats extends Transducer {
-  receive(state, input) {
+  step(state, input) {
     if (input !== this.last) {
       this.last = input
       return this.advance(state, input)
@@ -133,7 +133,7 @@ class TakeWhile extends Transducer {
   setup(p) {
     this.p = p
   }
-  receive(state, input) {
+  step(state, input) {
     if (this.p(input)) {
       return this.advance(state, input)
     }
@@ -147,7 +147,7 @@ class Take extends Transducer {
   setup(n) {
     this.n = n
   }
-  receive(state, input) {
+  step(state, input) {
     if (this.n > 0) {
       this.n = this.n - 1
       state = this.advance(state, input)
@@ -165,7 +165,7 @@ class Drop extends Transducer {
   setup(n) {
     this.n = n
   }
-  receive(state, input) {
+  step(state, input) {
     this.n = this.n - 1;
     return this.n >= 0 ? state : this.advance(state, input)
   }
@@ -178,7 +178,7 @@ class DropWhile extends Transducer {
     this.p = p
     this.dropping = true
   }
-  receive(state, input) {
+  step(state, input) {
     this.dropping = this.dropping && !this.p(input)
     return this.dropping ? state : this.advance(state, input)
   }
@@ -199,7 +199,7 @@ class Partition extends Transducer {
     }
     return super.result(state)
   }
-  receive(state, input) {
+  step(state, input) {
     this.part[this.i] = input
     this.i = this.i + 1
     if (this.i == this.n) {
@@ -213,7 +213,7 @@ class Partition extends Transducer {
 export const partition = Transformer(Partition)
 
 class Forwarder extends Transducer {
-  receive(state, input) {
+  step(state, input) {
     const result = this.advance(state, input)
     return isReduced(result) ? result.value : result
   }
@@ -223,7 +223,7 @@ class Cat extends Transducer {
   setup() {
     this.forwarder = new Forwarder(this.reducer)
   }
-  receive(state, input) {
+  step(state, input) {
     return reduce(input, this.forwarder, state)
   }
 }
@@ -278,7 +278,7 @@ Types.Array[reduce.symbol] = (array, transducer, state) => {
   let index = -1
   const count = array.length
   while(++index < count) {
-    state = transducer.receive(state, array[index])
+    state = transducer.step(state, array[index])
     if (isReduced(state)) {
       state = state.value
       break
@@ -300,7 +300,7 @@ Types.Iterator[reduce.symbol] = (iterator, transducer, state) => {
   // Otherwise we forward individual values.
   let {done, value} = iterator.next()
   while(!done) {
-    state = transducer.receive(state, value)
+    state = transducer.step(state, value)
     if (isReduced(state)) {
       state = state.value
       break;
@@ -311,7 +311,7 @@ Types.Iterator[reduce.symbol] = (iterator, transducer, state) => {
 }
 
 const reduceSingular = (unit, reducer, state) => {
-  const result = reducer.receive(state, unit)
+  const result = reducer.step(state, unit)
   return isReduced(result) ? result.value : result
 }
 
@@ -329,7 +329,7 @@ Types.Array[reducer.symbol] = new Reducer({
   result(array) {
     return array
   },
-  receive(array, input) {
+  step(array, input) {
     array.push(input)
     return array
   }
@@ -342,7 +342,7 @@ Types.Number[reducer.symbol] = new Reducer({
   result(number) {
     return number
   },
-  receive(number, input) {
+  step(number, input) {
     return number + input
   }
 })
@@ -354,7 +354,7 @@ Types.String[reducer.symbol] = new Reducer({
   result(string) {
     return string
   },
-  receive(string, input) {
+  step(string, input) {
     return string + input
   }
 })
@@ -366,7 +366,7 @@ Types.Null[reducer.symbol] = new Reducer({
   result(value) {
     return value
   },
-  receive(_, input) {
+  step(_, input) {
     return null
   }
 })
@@ -378,7 +378,7 @@ Types.Void[reducer.symbol] = new Reducer({
   result(value) {
     return value
   },
-  receive(_, input) {
+  step(_, input) {
     return void(0)
   }
 })
@@ -388,7 +388,7 @@ Types.Iterator[reducer.symbol] = new Reducer({
   empty() {
     return IteratorLazyTransformation.Empty
   },
-  receive(target, value) {
+  step(target, value) {
     target.value = value
     return target
   },
@@ -420,7 +420,7 @@ class IteratorLazyTransformation {
           this.done = true
           break;
         } else {
-          this.isReduced = isReduced(this.transducer.receive(this, value))
+          this.isReduced = isReduced(this.transducer.step(this, value))
           if (this.isReduced) {
             break;
           }
@@ -441,7 +441,7 @@ class ChannelInputReducer {
   result(channel) {
     return channel.input
   }
-  receive(channel, chunk) {
+  step(channel, chunk) {
     return channel.output.put(chunk)
   }
 }
