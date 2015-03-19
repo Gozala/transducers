@@ -48,23 +48,23 @@ export class Reducer {
 
 
 export class Transducer extends Reducer {
-  constructor(receiver, ...params) {
-    this.receiver = receiver
+  constructor(reducer, ...params) {
+    this.reducer = reducer
     this.setup(...params)
   }
   setup() {
   }
   empty() {
-    return this.receiver.empty()
+    return this.reducer.empty()
   }
   receive(state, input) {
     this.advance(state, input)
   }
   advance(state, input) {
-    return this.receiver.receive(state, input)
+    return this.reducer.receive(state, input)
   }
   result(state) {
-    return this.receiver.result(state)
+    return this.reducer.result(state)
   }
 }
 
@@ -75,7 +75,7 @@ export const Transform = (TransducerType, ...params) => {
     } else if (source && source[Transform.symbol]) {
       return compose(source, transform)
     } else {
-      return transduce(source, transform, receiver(source))
+      return transduce(source, transform, reducer(source))
     }
   }
   transform[Transform.symbol] = true
@@ -221,7 +221,7 @@ class Forwarder extends Transducer {
 
 class Cat extends Transducer {
   setup() {
-    this.forwarder = new Forwarder(this.receiver)
+    this.forwarder = new Forwarder(this.reducer)
   }
   receive(state, input) {
     return reduce(input, this.forwarder, state)
@@ -232,9 +232,9 @@ export const cat = Transform(Cat)
 export const mapcat = f => compose(cat, map(f))
 
 
-export const transduce = (source, transformer, receiver, initial) => {
-  if (!receiver) throw TypeError('transduce must be passed a receiver')
-  const transducer = transformer(receiver)
+export const transduce = (source, transformer, reducer, initial) => {
+  if (!reducer) throw TypeError('transduce must be passed a reducer')
+  const transducer = transformer(reducer)
   const result = reduce(source, transducer,
                             initial !== void(0) ? initial : transducer.empty())
   return transducer.result(result)
@@ -319,10 +319,10 @@ Types.Null[reduce.symbol] = reduceSingular
 Types.Void[reduce.symbol] = reduceSingular
 Types.Number[reduce.symbol] = reduceSingular
 
-export const receiver = source => methodsOf(source)[receiver.symbol]
-receiver.symbol = Symbol('receiver')
+export const reducer = source => methodsOf(source)[reducer.symbol]
+reducer.symbol = Symbol('reducer')
 
-Types.Array[receiver.symbol] = new Reducer({
+Types.Array[reducer.symbol] = new Reducer({
   empty() {
     return []
   },
@@ -335,7 +335,7 @@ Types.Array[receiver.symbol] = new Reducer({
   }
 })
 
-Types.Number[receiver.symbol] = new Reducer({
+Types.Number[reducer.symbol] = new Reducer({
   empty() {
     return 0
   },
@@ -347,7 +347,7 @@ Types.Number[receiver.symbol] = new Reducer({
   }
 })
 
-Types.String[receiver.symbol] = new Reducer({
+Types.String[reducer.symbol] = new Reducer({
   empty() {
     return ""
   },
@@ -359,7 +359,7 @@ Types.String[receiver.symbol] = new Reducer({
   }
 })
 
-Types.Null[receiver.symbol] = new Reducer({
+Types.Null[reducer.symbol] = new Reducer({
   empty() {
     return null
   },
@@ -371,7 +371,7 @@ Types.Null[receiver.symbol] = new Reducer({
   }
 })
 
-Types.Void[receiver.symbol] = new Reducer({
+Types.Void[reducer.symbol] = new Reducer({
   empty() {
     return void(0)
   },
@@ -384,7 +384,7 @@ Types.Void[receiver.symbol] = new Reducer({
 })
 
 const nil = {}
-Types.Iterator[receiver.symbol] = new Reducer({
+Types.Iterator[reducer.symbol] = new Reducer({
   empty() {
     return IteratorLazyTransformation.Empty
   },
