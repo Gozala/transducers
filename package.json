@@ -1,0 +1,53 @@
+{
+  "name": "transducers",
+  "version": "0.0.0",
+  "description": "Clojure inspired transducers implementation in JS",
+  "author": "Irakli Gozalishvili <rfobic@gmail.com> (http://jeditoolkit.com)",
+  "homepage": "https://github.com/gozala/transducers",
+  "keywords": [
+    "transducers",
+    "underscore",
+    "lodash",
+    "functional",
+    "transformation",
+    "util",
+    "reducer"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/gozala/transducers.git",
+    "web": "https://github.com/Gozala/transducers"
+  },
+  "bugs": {
+    "url": "https://github.com/gozala/transducers/issues"
+  },
+  "license": "MIT",
+  "main": "./lib/transducers.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "tap lib/test/*.js",
+    "start": "babel --watch --modules umdStrict --source-maps-inline --out-dir ./lib ./src",
+    "prepublish": "babel --modules umdStrict --source-maps-inline --out-dir ./lib ./src"
+  },
+  "testling": {
+    "files": "test/*.js",
+    "browsers": [
+      "ie/9..latest",
+      "chrome/25..latest",
+      "firefox/20..latest",
+      "safari/5.1..latest",
+      "opera/11.0..latest",
+      "iphone/6..latest",
+      "ipad/6..latest",
+      "android-browser/4.2..latest"
+    ]
+  },
+  "devDependencies": {
+    "babel": "^4.7.4",
+    "immutable": "^3.6.4",
+    "tap": "~0.4.8",
+    "tape": "~2.3.2"
+  }
+}
