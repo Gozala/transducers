@@ -391,7 +391,7 @@ Types.Iterator[reducer.symbol] = new Reducer({
     return IteratorLazyTransformation.Empty
   },
   step(target, value) {
-    target.value = value
+    target.buffer.push(value)
     return target
   },
   result(target) {
@@ -403,37 +403,45 @@ class IteratorLazyTransformation {
   constructor(source, transducer) {
     this.source = source
     this.transducer = transducer
+    this.buffer = []
+    this.isDrained = false
     this.done = false
-    this.isReduced = false
-    this.value = IteratorLazyTransformation.Nil
   }
   [Symbol.iterator]() {
     return this
   }
   next() {
-    this.value = IteratorLazyTransformation.Nil
-    while (this.value === IteratorLazyTransformation.Nil) {
-      if (this.isReduced) {
-        this.done = true
-        break;
+    // Pull from the source until something ends up in a buffer
+    // or until source is drained. Note that transducer maybe
+    // filtering so it may take multiple steps until something
+    // is being pushed to buffer. It also maybe that transducer
+    // is accumulating until result is called.
+    while (this.buffer.length === 0 && !this.isDrained) {
+      const {done, value} = this.source.next()
+      if (done) {
+        this.transducer.result(this)
+        this.isDrained = done
       } else {
-        const {done, value} = this.source.next()
-        if (done) {
-          this.done = true
-          break;
-        } else {
-          this.isReduced = isReduced(this.transducer.step(this, value))
-          if (this.isReduced) {
-            break;
-          }
-        }
+        const result = this.transducer.step(this, value)
+        this.isDrained = isReduced(result)
       }
     }
+
+    // At this poin we either managed to get something pushed
+    // to a buffer or source was exhausted or both. If something
+    // was pushed to a buffer we do not end until buffer is empty,
+    // so we start with that.
+    if (this.buffer.length > 0) {
+      this.value = this.buffer.shift()
+    } else {
+      this.done = this.isDrained
+    }
+
     return this
   }
 }
-IteratorLazyTransformation.Empty = new IteratorLazyTransformation()
-IteratorLazyTransformation.Nil = {}
+IteratorLazyTransformation.Empty = new String("IteratorLazyTransformation.Empty")
+IteratorLazyTransformation.Nil = new String("IteratorLazyTransformation.Nil")
 /*
 
 class ChannelInputReducer {
