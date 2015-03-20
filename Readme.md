@@ -251,7 +251,7 @@ Execution is from top to bottom & no extra functions are need to compose them.
 [RxJS]:https://github.com/Reactive-Extensions/RxJS
 [transducers-js]:https://github.com/cognitect-labs/transducers-js
 [transducers.js]:https://github.com/jlongster/transducers.js
-[fab.js](https://www.youtube.com/watch?v=ViQ8kiLtDXc)
-[into](http://cognitect-labs.github.io/transducers-js/classes/transducers.html#methods_transducers.into)
-[reduce](http://cognitect-labs.github.io/transducers-js/classes/transducers.html#methods_transducers.reduce)
-[transduce](http://cognitect-labs.github.io/transducers-js/classes/transducers.html#methods_transducers.transduce)
+[fab.js]:https://www.youtube.com/watch?v=ViQ8kiLtDXc
+[into]:http://cognitect-labs.github.io/transducers-js/classes/transducers.html#methods_transducers.into
+[reduce]:http://cognitect-labs.github.io/transducers-js/classes/transducers.html#methods_transducers.reduce
+[transduce]:http://cognitect-labs.github.io/transducers-js/classes/transducers.html#methods_transducers.transduce
