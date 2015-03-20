@@ -169,7 +169,7 @@ test("remove", assert => {
                    "removes from iterator")
 })
 
-test("dorp", assert => {
+test("drop", assert => {
   assert.deepEqual(drop(2)([1, 2, 3, 4, 5]),
                    [3, 4, 5],
                    "dropped two items")
