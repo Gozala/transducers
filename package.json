@@ -32,7 +32,7 @@
     "prepublish": "babel --modules umdStrict --source-maps-inline --out-dir ./lib ./src"
   },
   "testling": {
-    "files": "test/*.js",
+    "files": "lib/test/*.js",
     "browsers": [
       "ie/9..latest",
       "chrome/25..latest",
