@@ -179,7 +179,7 @@ class DropWhile extends Transducer {
     this.dropping = true
   }
   step(state, input) {
-    this.dropping = this.dropping && !this.p(input)
+    this.dropping = this.dropping && this.p(input)
     return this.dropping ? state : this.advance(state, input)
   }
 }
