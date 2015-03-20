@@ -343,7 +343,8 @@ Types.Number[reducer.symbol] = new Reducer({
     return number
   },
   step(number, input) {
-    return number + input
+    return isArray(input) ? input.reduce(this.step, number) :
+           number + input
   }
 })
 
@@ -355,7 +356,8 @@ Types.String[reducer.symbol] = new Reducer({
     return string
   },
   step(string, input) {
-    return string + input
+    return isArray(input) ? string.concat(...input) :
+           string + input
   }
 })
 
