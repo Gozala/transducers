@@ -1,6 +1,6 @@
 {
   "name": "transducers",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Clojure inspired transducers implementation in JS",
   "author": "Irakli Gozalishvili <rfobic@gmail.com> (http://jeditoolkit.com)",
   "homepage": "https://github.com/gozala/transducers",
