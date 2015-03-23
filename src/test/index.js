@@ -1,14 +1,10 @@
 import test from "./test"
 import * as Immutable from "immutable"
-import {transduce, map, filter, remove, cat,
-        mapcat, keep, take, takeWhile,
-        drop, dropWhile, dropRepeats,
-        partition, partitionBy, Transducer,
-        reduce, Reducer} from "../../"
+import {reduce, transduce, map, filter, remove, cat,
+        mapcat, partition, take, takeWhile,
+        drop, dropWhile, dropRepeats} from "../../"
 
 // utility
-const first = xs => xs[0]
-const second = xs => xs[1]
 const inc = x => x + 1
 const upperCase = char => char.toUpperCase()
 const lowerCase = char => char.toLowerCase()
@@ -37,18 +33,6 @@ if (!Array.from) {
     }
   }
 }
-
-const reducer = f => new Reducer({
-  empty() {
-    return f()
-  },
-  step(result, input) {
-    return f(result, input)
-  },
-  result(result) {
-    return f(result)
-  }
-})
 
 test("map", assert => {
   const incer = map(inc)
@@ -500,16 +484,27 @@ test("composition", assert => {
 
 test("trasduce", assert => {
   const evens = filter(isEven)
-  assert.equal(transduce([1, 2, 3, 4], evens,
-                         reducer((x, y) => y === void(0) ? x : x + y),
-                         0),
-               6,
+  assert.equal(transduce(evens,
+                         (x, y) => y === void(0) ? x : x + y,
+                         2,
+                         [1, 2, 3, 4]),
+               8,
                "transduced array with custom reducer")
 
+  assert.equal(transduce(evens,
+                         (x, y) => x === void(0) ? 0 :
+                                   y === void(0) ? x :
+                                   x + y,
+                         [1, 2, 3, 4]),
+               6,
+               "transduced without initial value")
+
+
   const iterator = Immutable.Iterable({x: 1, Y: 2, z: 3, w: 4})
-  assert.equal(transduce(iterator.values(), evens,
-                         reducer((x, y) => y === void(0) ? x : x + y),
-                         5),
+  assert.equal(transduce(evens,
+                         (x, y) => y === void(0) ? x : x + y,
+                         5,
+                         iterator.values()),
                11,
               "transduce iterator with custom reducer")
 })
