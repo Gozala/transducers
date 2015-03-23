@@ -1,4 +1,4 @@
-const isSymbolDefined = typeof(Symbol) === 'undefined';
+const isSymbolDefined = typeof(Symbol) !== 'undefined';
 const symbol = (isSymbolDefined && Symbol.for) || hint => `@@${hint}`
 
 const $iterator = isSymbolDefined && Symbol.iterator || symbol('iterator')
