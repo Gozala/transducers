@@ -11,14 +11,14 @@ export const methodOf = (target, id) => {
     const type = typeof(target)
     method = target === null ? NullType.prototype[id] :
     target === void(0) ? UndefinedType.prototype[id] :
-    isArray(target) ? ArrayType.prototype[id] :
-    isIterator(target) ? IteratorType.prototype[id] :
-    type === 'function' ? FunctionType.prototype[id] :
     type === 'string' ? StringType.prototype[id] :
     type === 'number' ? NumberType.prototype[id] :
     type === 'boolean' ? BooleanType.prototype[id] :
-    isRegExp(target) ? RegExpType.prototype[id] :
     type === 'symbol' ? SymbolType.prototype[id] :
+    isArray(target) ? ArrayType.prototype[id] :
+    isIterator(target) ? IteratorType.prototype[id] :
+    isRegExp(target) ? RegExpType.prototype[id] :
+    type === 'function' ? FunctionType.prototype[id] :
     type === 'object' ? ObjectType.prototype[id] :
     DefaultType.prototype[id]
   }
