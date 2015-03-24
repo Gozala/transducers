@@ -2,7 +2,9 @@ import test from "./test"
 import * as Immutable from "immutable"
 import {reduce, transduce, map, filter, remove, cat,
         mapcat, partition, take, takeWhile,
-        drop, dropWhile, dropRepeats} from "../../"
+        drop, dropWhile, dropRepeats,
+
+        init, step, result} from "../../"
 
 // utility
 const inc = x => x + 1
@@ -512,3 +514,88 @@ test("trasduce", assert => {
                11,
               "transduce iterator with custom reducer")
 })
+
+
+test("immutable list", assert => {
+  const incer = map(inc)
+  const list = Immutable.List.of(1, 2, 3, 4)
+  const t1 = incer(list)
+
+  assert.notOk(t1 instanceof Immutable.List,
+               "result is not a list")
+
+  assert.deepEqual([...t1],
+                   [2, 3, 4, 5],
+                   "result is an iterator")
+
+  Immutable.List.prototype[init.symbol] = () =>
+    Immutable.List().asMutable()
+
+  Immutable.List.prototype[result.symbol] = (list) =>
+    list.asImmutable()
+
+  Immutable.List.prototype[step.symbol] = (list, item) =>
+    list.push(item)
+
+
+  const t2 = incer(list)
+
+
+  assert.ok(t2 instanceof Immutable.List,
+            "result is a list")
+
+
+  assert.ok(t2.equals(Immutable.List.of(2, 3, 4, 5)),
+            "transformed list was returned")
+
+  const t3 = (filter(isEven))
+             (incer)
+             (incer)
+             (incer)
+             (list)
+
+  assert.ok(t3.equals(Immutable.List.of(5, 7)),
+            "composed transform works fine")
+
+})
+
+
+
+
+test("immutable map", assert => {
+  const f = map(([key, value]) => [key.toUpperCase(),
+                                   value * value])
+
+  const m1 = Immutable.Map({x: 1, y: 2})
+
+  const t1 = f(m1)
+
+  assert.notOk(t1 instanceof Immutable.Map,
+               "result is not a map")
+
+  assert.deepEqual([...t1],
+                   [["X", 1], ["Y", 4]],
+                   "result is transformed iterator")
+
+  Immutable.Map.prototype[init.symbol] = () =>
+    Immutable.Map().asMutable()
+
+  Immutable.Map.prototype[result.symbol] = (map) =>
+    map.asImmutable()
+
+  Immutable.Map.prototype[step.symbol] = (map, [key, value]) =>
+    map.set(key, value)
+
+
+  const t2 = f(m1)
+
+
+  assert.ok(t2 instanceof Immutable.Map,
+            "result is instanceof Map")
+
+
+  assert.ok(t2.equals(Immutable.Map({X: 1, Y: 4})),
+            "map was transformed")
+})
+
+
