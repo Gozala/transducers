@@ -151,7 +151,7 @@ export class Stepper extends Reducer {
     return this[$step]()
   }
   [$result](result) {
-    return this[$step](result)
+    return result
   }
 }
 
