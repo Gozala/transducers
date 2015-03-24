@@ -85,7 +85,7 @@ export const isRegExp = x =>
 
 // Returns `true` if given `x` is a JS iterator.
 export const isIterator = x =>
-  x && (x[$iterator] || typeof(x.next) === 'function')
+  x && x[$iterator]
 
 // Returns true if `x` is boxed value & signifies that
 // reduction is complete.
@@ -500,7 +500,8 @@ export class IteratorType extends ObjectType {
   [step.symbol](result, input) {
     return result[step.symbol](result, input)
   }
-  [reduce.symbol](transducer, initial, iterator) {
+  [reduce.symbol](transducer, initial, source) {
+    const iterator = source[$iterator]()
     // If it is transformation from iterator to iterator, then initial value is
     // going to be `IteratorLazyTransform` as (returned by [init.symbol] method above)
     // In such case we just create an instance of `IteratorLazyTransform` and return it
@@ -532,7 +533,7 @@ export class IteratorLazyTransform extends IteratorType {
     // Each transformation step `this.transducer.step` may produce 0, 1 or more
     // steps in return. In order to accomodate extra values internal buffer is
     // going to be used.
-    this.buffer = []
+    this[$buffer] = []
 
     this.source = source
     this.transducer = transducer
@@ -540,7 +541,7 @@ export class IteratorLazyTransform extends IteratorType {
     this.done = false
   }
   [step.symbol](target, value) {
-    target.buffer.push(value)
+    target[$buffer].push(value)
     return target
   }
   [$iterator]() {
@@ -553,7 +554,7 @@ export class IteratorLazyTransform extends IteratorType {
     // in which case several values will be pushed. It also maybe that
     // transducer is accumulating ond on result more values will be pushed
     // (like partition).
-    while (this.buffer.length === 0 && !this.isDrained) {
+    while (this[$buffer].length === 0 && !this.isDrained) {
       const {done, value} = this.source.next()
       // If source iterator is drained invoke result on transducer to let
       // it cleanup or push whatever it aggregated.
@@ -572,8 +573,8 @@ export class IteratorLazyTransform extends IteratorType {
     // At this poin we either get something in a buffer or source was exhausted
     // or both. If something is in a buffer just return from it. If buffer is
     // empty then source is drained as well so we mark this done and finish.
-    if (this.buffer.length > 0) {
-      this.value = this.buffer.shift()
+    if (this[$buffer].length > 0) {
+      this.value = this[$buffer].shift()
     } else {
       this.value = undefined
       this.done = this.isDrained
@@ -582,3 +583,5 @@ export class IteratorLazyTransform extends IteratorType {
     return this
   }
 }
+const $buffer = symbol("IteratorLazyTransform/buffer")
+IteratorLazyTransform.buffer = $buffer
