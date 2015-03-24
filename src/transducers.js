@@ -69,10 +69,6 @@ export const transformer = transform => {
 }
 const $transformer = transformer.symbol = symbol("transducer/transformer")
 
-// Functional composition compose(f, g) => f(g())
-const compose = (f, g) => (...args) => f(g(...args))
-
-
 const prototype = Object.prototype
 
 // Returns `true` if given `x` is a JS array.
@@ -166,7 +162,7 @@ export class Transducer extends Reducer {
     return this.reducer[$init]()
   }
   [$step](result, input) {
-    this.advance(result, input)
+    return this.advance(result, input)
   }
   advance(result, input) {
     return this.reducer[$step](result, input)
@@ -176,6 +172,11 @@ export class Transducer extends Reducer {
   }
 }
 
+export class Composite extends Transducer {
+  constructor(source, transformer, TransducerType, ...params) {
+    this.reducer = new TransducerType(transformer(source), ...params)
+  }
+}
 
 // Creates a transformer function that is a thunk for `TransducerType` and it's parameters.
 // Once returned transformer is inovked it's going to do one of the following things:
@@ -189,9 +190,12 @@ export const Transform = (TransducerType, ...params) => {
     if (source instanceof Reducer) {
       return new TransducerType(source, ...params)
     } else if (source && source[$transformer]) {
-      return compose(source, transform)
+      return Transform(Composite, source, TransducerType, ...params)
     } else if (isReducer(source)) {
-      return transduce(transform, new Producer(source), source)
+      const transducer = new TransducerType(new Producer(source), ...params)
+      const initial = transducer[$init]()
+      const result = reduce(transducer, initial, source)
+      return transducer[$result](result)
     } else {
       throw TypeError("Unsupported argument type was passed to a transformer")
     }
@@ -352,7 +356,6 @@ class Cat extends Transducer {
 }
 
 export const cat = Transform(Cat)
-export const mapcat = f => compose(cat, map(f))
 
 export const transduce = (transformer, reducer, initial, source) => {
   reducer = reducer instanceof Reducer ? reducer :

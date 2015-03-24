@@ -453,10 +453,9 @@ test("cat", assert => {
 })
 
 test("mapcat", assert => {
-  const mapcat = f => (map(f))(cat)
-  const split = by => string => string.split(by)
-
-  assert.deepEqual(mapcat(split("/"))(["path/to", "dir/file"]),
+  assert.deepEqual((map(x => x.split("/")))
+                   (cat)
+                   (["path/to", "dir/file"]),
                    ["path", "to", "dir", "file"])
 })
 
@@ -479,6 +478,11 @@ test("composition", assert => {
 
   assert.deepEqual(add2(void(0)), void(0),
                    "map over void is void")
+
+  assert.deepEqual((filter(isEven))
+                   (map(inc))
+                   ([1, 4, 9, 10]),
+                   [5, 11])
 })
 
 

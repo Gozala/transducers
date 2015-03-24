@@ -161,7 +161,7 @@ In fact this library initially started as an attempt to enhance API of
 path.
 
 The core difference from both of the libraries is in the way transducers
-are composed or applied to input. In that regard it actually has more in
+are composed & applied to input. In that regard it actually has more in
 common with [fab.js][] than transducers.
 
 
@@ -171,16 +171,16 @@ In above mentioned libraries transducer application happens through other
 functions like [into][], [reduce][] & [transduce][] & expectation is that
 data type constructors can take transducer to create transduced version
 of it. In contrast this library does not provide [into][] and considers both
-[reduce][] and [transduce][] to be to low lever for cases where transformation
-of a data type to the same type of data type is desired. Instead in this libray
-transducer functions can take input as an argument and return transformed version
-of it:
+[reduce][] and [transduce][] to be to low level APIs. For most common cases
+you would want to transform a data structure of a type to different data
+structure of the same type. In this library transducer functions can just take
+that data structure as an argument and return transformed version:
 
 ```js
 const inc = x => x + 1
 map(inc)([1, 2, 3]) // => [2, 3, 4]
 map(char => char.toUpperCase())("hello") // => "HELLO"
-```
+````
 
 ### transducers can be applied to primitives
 
@@ -191,8 +191,8 @@ just as well as they can to collections:
 map(inc)(5) // => 6
 ```
 
-Also transductin over nil types values like `null` and `undefined` is no op and
-return same output as input:
+any transformation over nil types like `null` and `undefined` is no op and
+return input back:
 
 ```js
 map(inc)(null) // => null
@@ -206,20 +206,21 @@ as a plain function composition that you know or at least have seen in [undersco
 Idea is simple composing `f()` and `g()` functions produces `f(g())`.
 
 ```js
-_.compose(x => x + 1, x => x * 2)(2) // => 5
+reduce(_.compose(x => x + 1, x => x * 2), 0, 2) // => 5
 ```
 
-Although in case of transducers there is a surprising twist related to their implementation
-that is illustrated in the example below:
+Although in case of transducers there is a surprising twist related to the implementation
+illustrated in the example below:
 
 ```js
-_.compose(map(x => x + 1), map(x => x * 2))([2]) // => [6]
+reduce(_.compose(map(x => x + 1), map(x => x * 2), [], [2]) // => [6]
 
 ```
 
-Unlike right to left execution in ordinary function composition execution order
-in transducers is from left to right. In order to avoid confusion this library
-embraced API demonstrated by [fab.js][] while back:
+Unlike right to left execution as in ordinary function composition execution order
+in transducers is from left to right instead. In order to avoid confusion & dependency
+on additional composition constructs this library takes inspiration from an API pioneered
+by [fab.js][] a while back:
 
 
 ```js
@@ -229,6 +230,11 @@ embraced API demonstrated by [fab.js][] while back:
 ```
 
 Execution is from top to bottom & no extra functions are need to compose them.
+
+**P.S.:** You still could use `_.compose` but in that case avoid using application like
+`_compose(f, g)([1, 2, 3])` as that won't do what you expect, given that input will be
+passed to `g` and then result to `f` instead of passing it to `f.g` composition.
+
 
 ## License
 
